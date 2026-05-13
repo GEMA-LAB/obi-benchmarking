@@ -22,7 +22,7 @@ def get_int_input(text : str = "test") -> int:
         return 0
 
 
-def execute_problems_by_year(problems: list, year: int):
+def execute_problems_by_year(problems: list, year: int, output_path: str = "default"):
     
     print_partition(text="ZERO-SHOT vs FEW-SHOT")
     problems_year = []
@@ -41,7 +41,7 @@ def execute_problems_by_year(problems: list, year: int):
             for use_img in image_modes:
                 img_label = "COM imagens" if use_img else "SEM imagens"
                 print_partition(f"Executando: {t} | {lan} | {img_label}")
-                orch = Orchestrator(type=t, language=lan, use_images=use_img)
+                orch = Orchestrator(type=t, language=lan, use_images=use_img, output_path=output_path)
                 if orch.execute(problems=problems_year):
                     print("Resultado está em output/results/")
                     print_partition("REINICIANDO")
@@ -71,21 +71,26 @@ def main():
         
         path_database = Path("database")
         questions_path = []
-        
-        for folder in list(path_database.iterdir()):
-            if folder.is_dir():
-                questions_path.append(folder)
-        
-        
-        problem_names = []            
-        for path in questions_path:
-            problem_names.append(path.name)
-        
+        problem_names = []
         problems = []
-        for question_path in questions_path:
-            path_test_cases = question_path / "test_cases"
-            if path_test_cases.exists():
-                problems.append((question_path.name, load_problem(Path(question_path / "problem.json"))))
+        
+        if path_database.is_dir():
+            for folder in list(path_database.iterdir()):
+                if folder.is_dir():
+                    questions_path.append(folder)
+            
+            
+            for path in questions_path:
+                problem_names.append(path.name)
+            
+            for question_path in questions_path:
+                path_test_cases = question_path / "test_cases"
+                if path_test_cases.exists():
+                    problems.append((question_path.name, load_problem(Path(question_path / "problem.json"))))
+        
+        else:
+            print("Não existe questões no diretório database")
+            exit(1)
         
         print_partition("FIM DA CRIAÇÃO DATABASE")
     except Exception as e:    
@@ -93,14 +98,52 @@ def main():
         print("Erro: ", e)
         exit(1)
     
+    output_path = "default"
+    
+    while True:
+        print_partition(text="MENU")
+        
+        out_path = Path("output")
+        
+        options = []
+        options.append("Criar um ambiente")
+        
+        for path in out_path.glob("*"):
+            if path.is_dir():
+                options.append(path.name)
+        
+        for i in range(len(options)):
+            print(f"{i} - {options[i]}")
+        
+        try:
+            op = int(input("Crie ou escolha um ambiente de resultados, para sair basta digitar um número que não exista (apenas os números): "))
+            if op == 0:
+                try:
+                    year = int(get_int_input("Digite um ano entre 1999 a 2026: "))
+                    execute_problems_by_year(problems, year)
+                except Exception as e:
+                    print("Digite apenas números!!!")
+            elif op > 0 and op < len(options):
+                output_path = options[op]
+                break
+            else:
+                print_partition(text="MENU")
+                break
+        except Exception as e:
+            print("As opções são apenas números!!!")
+    
+    print_partition(text=f"Os resultados está em output/{output_path}")
     print_partition(text=f"NÚMERO DE QUESTÕES COM TEST CASES {len(problems)}")
     while True:
         print_partition(text="MENU")
         
         op = input("Quer executar um ano específico (y/n): ")
         if op == 'y':
-            year = get_int_input("Digite um ano entre 1999 a 2026: ")
-            execute_problems_by_year(problems, year)
+            try:
+                year = int(get_int_input("Digite um ano entre 1999 a 2026: "))
+                execute_problems_by_year(problems, year)
+            except Exception as e:
+                print("Digite apenas números!!!")
         else:
             print_partition(text="MENU")
             break
@@ -165,7 +208,7 @@ def main():
         
         print_partition(text=f"EXECUÇÃO SERÁ COM {len(problems_execute)} QUESTÕES")
         
-        orchestrador = Orchestrator(type=type_prompt, language=language, use_images=use_images)
+        orchestrador = Orchestrator(type=type_prompt, language=language, use_images=use_images, output_path=output_path)
         if orchestrador.execute(problems=problems_execute):
             print("Resultado está em output/results/")
             print_partition("REINICIANDO")

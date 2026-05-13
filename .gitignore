@@ -9,6 +9,7 @@ database/*
 !database/problems_of_the_obi.txt
 !database/model_problem.json
 !database/dataset-questions-obi.zip
+!database/dataset-questions-obi-csbc-semish.zip
 
 #Judge
 piston/data/*

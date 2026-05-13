@@ -11,11 +11,12 @@ import base64
 
 class Orchestrator:
 
-    def __init__(self, type: str, language: str, use_images: bool = False):
+    def __init__(self, type: str, language: str, use_images: bool = False, output_path: str = 'default'):
         self.__type = type
         self.__language = language
         self.__use_images = use_images
         self.__img_mode = "img" if use_images else "noimg"
+        self.__output_path = output_path
 
         if language == "python":
             self.__format_file_code = "py"
@@ -51,6 +52,7 @@ class Orchestrator:
                     model: str = "test",
                     content: str = "test") -> bool:
         try:
+            base += f"/{self.__output_path}"
             target_dir = Path(base) / model / self.__type / f"{self.__language}_{self.__img_mode}"
 
             target_dir.mkdir(parents=True, exist_ok=True)
@@ -235,7 +237,7 @@ class Orchestrator:
             results = []
 
             path_results = Path(
-                f"output/cbsoft_sbes_2026/results/results_{self.normalize_model_name(model)}_{self.__language}_{self.__type}_{self.__img_mode}.csv")
+                f"output/{self.__output_path}/results/results_{self.normalize_model_name(model)}_{self.__language}_{self.__type}_{self.__img_mode}.csv")
 
             if path_results.exists():
                 df = pd.read_csv(path_results)
@@ -314,7 +316,7 @@ class Orchestrator:
                     continue
                 
                 if self.create_file(name=f"{name_problem}.{self.__format_file_code}",
-                                    base="output/cbsoft_sbes_2026",
+                                    base="output",
                                     model=self.normalize_model_name(model),
                                     content=code):
                     print("Arquivo criado com sucesso!!")
