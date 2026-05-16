@@ -216,6 +216,11 @@ class Orchestrator:
 
     def execute(self, problems: list) -> bool:
 
+        timeout = 1.0
+        
+        if self.__language == "python":
+            timeout = 3.0
+        
         for _, provider in config.list_providers().items():
 
             #Config to experiment
@@ -243,137 +248,108 @@ class Orchestrator:
                 df = pd.read_csv(path_results)
 
                 registros = df.to_dict('records')
-
+                
+                i = 0
+                index_by_name = {}
                 for row in registros:
+                    print(row)
                     results.append(EvaluationResult(**row))
-
-            questoes_concluidas = {
-                resultado.question_name for resultado in results}
+                    index_by_name[row["question_name"]] = i
+                    i += 1
 
             for name_problem, problem in problems:
-                if name_problem in questoes_concluidas:
-                    print(f"Pulando '{name_problem}' (já avaliado).")
-                    continue
-
-                test_cases = self.get_test_cases(
-                    "database/", name_problem, [])
-                
                 print(f"Processando questão: {name_problem}")
                 
-                if self.__type == "zero":
-                    prompt = ZERO_SHOT_PROMPT_TEMPLATE.format(linguagem=self.__language,
-                                                              contexto=self.format_problem(problem))
-                elif self.__type == "few":
-                    prompt = FEW_SHOT_PROMPT_TEMPLATE.format(linguagem=self.__language,
-                                                             contexto=self.format_problem(
-                                                                 problem),
-                                                             exemplos=self.get_exemplos())
-                else:
-                    return False
-
-                # Load images as base64 if use_images is enabled
-                images_base64 = None
-                if self.__use_images and problem.imgs:
-                    images_base64 = self.__load_images_base64(name_problem, problem.imgs)
-                    if images_base64:
-                        print(f"  {len(images_base64)} imagem(ns) carregada(s) para envio multimodal.")
-                    else:
-                        print(f"Nenhuma imagem encontrada, enviando apenas texto.")
-                        images_base64 = None
-
-                code_response, total_tokens, cost_prompt, duration_create_code = llm_service.create_code_llm(
-                    prompt=prompt,
-                    input_price=input_price,
-                    output_price=output_price,
-                    images_base64=images_base64)
-
-                code = self.valid_code(code_response)
+                path_code_questios = Path(f"output/{self.__output_path}/{self.normalize_model_name(model)}/{self.__type}/{self.__language}_{self.__img_mode}") / f"{name_problem}.{self.__format_file_code}"
                 
-                if len(test_cases) == 0:
-                    print("Próxima questão...")
-
-                    results.append(EvaluationResult(
-                        question_name=name_problem,
-                        difficulty=problem.difficulty,
-                        llm_code_creation_time=duration_create_code,
-                        total_tokens=total_tokens,
-                        cost_prompt=cost_prompt,
-                        judge_predict="NO TEST CASES",
-                        execution_time=0.0,
-                        AC=0,
-                        WA=0,
-                        RE=0,
-                        TLE=0,
-                        CE=0,
-                        total_test_cases=len(test_cases)
-                    ))
-                    
-                    if self.create_csv(results=results, model=self.normalize_model_name(model)):
-                        print("Resultado criado com sucesso!")
+                code = None
+                if not path_code_questios.exists():
+                    if self.__type == "zero":
+                        prompt = ZERO_SHOT_PROMPT_TEMPLATE.format(linguagem=self.__language,
+                                                                contexto=self.format_problem(problem))
+                    elif self.__type == "few":
+                        prompt = FEW_SHOT_PROMPT_TEMPLATE.format(linguagem=self.__language,
+                                                                contexto=self.format_problem(
+                                                                    problem),
+                                                                exemplos=self.get_exemplos())
                     else:
-                        print("Erro ao criar o resultado")
+                        return False
+
+                    # Load images as base64 if use_images is enabled
+                    images_base64 = None
+                    if self.__use_images and problem.imgs:
+                        images_base64 = self.__load_images_base64(name_problem, problem.imgs)
+                        if images_base64:
+                            print(f"  {len(images_base64)} imagem(ns) carregada(s) para envio multimodal.")
+                        else:
+                            print(f"Nenhuma imagem encontrada, enviando apenas texto.")
+                            images_base64 = None
+
+                    code_response, total_tokens, cost_prompt, duration_create_code = llm_service.create_code_llm(
+                        prompt=prompt,
+                        input_price=input_price,
+                        output_price=output_price,
+                        images_base64=images_base64)
+                    
+                    del prompt
+                    
+                    code = self.valid_code(code_response)
+                    
+                    judge_predict = "NO JUDGE"
+                    
+                    if code is None:
+                        judge_predict = "NO CODE"
+                    
+                    evaluation = EvaluationResult(
+                                        question_name=name_problem,
+                                        difficulty=problem.difficulty,
+                                        llm_code_creation_time=duration_create_code,
+                                        total_tokens=total_tokens,
+                                        cost_prompt=cost_prompt,
+                                        judge_predict=judge_predict,
+                                        execution_time=0.0,
+                                        AC=0,
+                                        WA=0,
+                                        RE=0,
+                                        TLE=0,
+                                        CE=0,
+                                        total_test_cases=0
+                                    )
+                    
+                    if name_problem in index_by_name.keys():
+                        results[index_by_name[name_problem]] = evaluation
+                    else:
+                        results.append(evaluation)
+                        index_by_name[name_problem] = len(results) - 1
                         
-                    continue
-                
-                if self.create_file(name=f"{name_problem}.{self.__format_file_code}",
-                                    base="output",
-                                    model=self.normalize_model_name(model),
-                                    content=code):
-                    print("Arquivo criado com sucesso!!")
+                    if self.create_csv(results=results, model=self.normalize_model_name(model)):
+                        print("Resultado da LLM criado com sucesso!!!")
+                    else:
+                        print("Erro ao criar o resultado da LLM!!!")
                 else:
-                    print("Próxima questão...")
-
-                    results.append(EvaluationResult(
-                        question_name=name_problem,
-                        difficulty=problem.difficulty,
-                        llm_code_creation_time=duration_create_code,
-                        total_tokens=total_tokens,
-                        cost_prompt=cost_prompt,
-                        judge_predict="NO CODE",
-                        execution_time=0.0,
-                        AC=0,
-                        WA=0,
-                        RE=0,
-                        TLE=0,
-                        CE=0,
-                        total_test_cases=len(test_cases)
-                    ))
-                    
-                    if self.create_csv(results=results, model=self.normalize_model_name(model)):
-                        print("Resultado criado com sucesso!")
-                    else:
-                        print("Erro ao criar o resultado")
-                        
-                    continue
-
+                    code = path_code_questios.read_text()
+                    print("Código dessa questão já foi criado!!!")
+                
+                test_cases = self.get_test_cases("database/", name_problem, [])
                 judge_predict, counts, total_cases, max_time = judge_service.execute(code=code,
-                                                                                     test_cases=test_cases)
-
-                print(counts)
-                
-                results.append(EvaluationResult(
-                    question_name=name_problem,
-                    difficulty=problem.difficulty,
-                    llm_code_creation_time=duration_create_code,
-                    total_tokens=total_tokens,
-                    cost_prompt=cost_prompt,
-                    judge_predict=judge_predict,
-                    execution_time=max_time,
-                    AC=counts["AC"],
-                    WA=counts["WA"],
-                    RE=counts["RE"],
-                    TLE=counts["TLE"],
-                    CE=counts["CE"],
-                    total_test_cases=total_cases
-                ))
+                                                                                     test_cases=test_cases,
+                                                                                     timeout=timeout)
+                if name_problem in index_by_name.keys():
+                        results[index_by_name[name_problem]].judge_predict = judge_predict
+                        results[index_by_name[name_problem]].judge_predict=judge_predict
+                        results[index_by_name[name_problem]].execution_time=max_time
+                        results[index_by_name[name_problem]].AC=counts["AC"]
+                        results[index_by_name[name_problem]].WA=counts["WA"]
+                        results[index_by_name[name_problem]].RE=counts["RE"]
+                        results[index_by_name[name_problem]].TLE=counts["TLE"]
+                        results[index_by_name[name_problem]].CE=counts["CE"]
+                        results[index_by_name[name_problem]].total_test_cases=total_cases
                 
                 if self.create_csv(results=results, model=self.normalize_model_name(model)):
-                    print("Resultado criado com sucesso!")
+                    print("Resultado do JUDGE criado com sucesso!!!")
                 else:
-                    print("Erro ao criar o resultado")
-                    
-                del prompt
-
+                    print("Erro ao criar o resultado do JUDGE!!!")
+                
             del llm_service, judge_service
 
         return True
