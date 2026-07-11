@@ -1,0 +1,218 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian,english]{babel}
+\usepackage{float}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Experimental Evaluation of the Capability of LLMs in Solving Problems in the Programming Category of the Brazilian Olympiad in Informatics}
+
+\author{\IEEEauthorblockN{Authors Omitted for Blind Review}
+\IEEEauthorblockA{\textit{Institution Omitted for Blind Review}}
+}
+
+\maketitle
+
+\begin{abstract}
+This article evaluates the capability of Large Language Models (LLMs) to solve complex algorithmic problems from the Brazilian Olympiad in Informatics (OBI). Competitive programming challenges AI by requiring semantic disambiguation, computational modeling, and code optimization under strict time and memory constraints. To this end, we developed an automated environment featuring a code-generating agent and a computational judge for validation. Results show that models easily solve basic-level questions but fail in advanced topics requiring complex logical reasoning. Furthermore, using examples in the prompt proved essential to guide the generated output. The research maps the current limits and capabilities of LLMs, providing a solid foundation for their future integration as support tools in competitive programming education.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Large Language Models, Competitive Programming, Brazilian Olympiad in Informatics, Code Generation, Educational Support.
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Automatic programming problem solving is one of the longstanding challenges in Artificial Intelligence. Unlike conventional software engineering tasks, competitive programming requires sophisticated skills from software developers. The AI agent must be able to interpret ambiguous problem statements, requiring semantic disambiguation, extract implicit requirements, perform abstract computational modeling, and design optimized algorithms under constraints related to computational cost, including execution time and memory. In the Brazilian computing educational scenario, the Brazilian Olympiad in Informatics (OBI) stands out as one of the instruments fostering these skills, challenging students to solve highly complex programming problems under strict time and memory constraints.
+
+In parallel, the emergence and rapid evolution of Large Language Models (LLMs) have transformed the fields of software engineering and artificial intelligence, demonstrating important capabilities in automatic code generation and the translation of natural language requirements into programming languages. However, the application of these tools in competitive programming contexts still presents significant performance gaps. In these scenarios, the problem statements frequently require deep semantic interpretation and the construction of complex chains of reasoning, as well as the employment of advanced techniques such as dynamic programming and graph theory. Although national and international studies investigate the capability of LLMs in problem-solving across various contexts and domains \cite{chen2021evaluating, mendonca2024evaluating, viegas2025assessing, huang2024competition, zheng2025livecodebench, li2024evaluating, almeida2023bluex}, there is still a lack of experimental evidence regarding the behavior of these tools when faced with problems located in competitive olympiads, such as those of the OBI.
+
+Competitive programming emerges as a rigorous benchmark to evaluate these tools, as it transcends simple coding by demanding deep semantic interpretation, efficient algorithmic modeling, and obedience to strict time and memory limits. In this scenario, the Brazilian Olympiad in Informatics (OBI) in the programming category stands out for combining objective validation, through automatic judges and well-defined input and output tests, with a broad categorization of difficulties, ranging from basic structures to dynamic programming and graph theory \cite{obi2026}. Such characteristics consolidate the OBI programming problems as a methodologically robust environment for the controlled analysis of how LLMs handle different levels of complexity in code generation.
+
+This work presents an experimental evaluation of the capability of LLMs in solving OBI problems in the programming category, analyzing their performance against different technical requirements. To this end, an automated environment was developed that orchestrates the interaction with the models and the validation of the solutions through an automatic judge system. The main contributions of this study include: (i) the identification of hit and miss patterns at different difficulty levels; (ii) the analysis of the impact of zero-shot and few-shot prompting techniques; (iii) the evaluation of the impact of visual elements (images) on the LLMs' ability to interpret problem statements; and (iv) the provision of subsidies for the use of LLMs as support for teaching programming.
+
+The remainder of this article is organized as follows: Section 2 presents related work; Section 3 details the experimental methodology, including the description of the judge environment and the evaluated models; Section 4 discusses the performed experiments; Section 5 presents and discusses the results obtained under the metrics of success rate and efficiency; and, finally, Section 6 presents the conclusions and perspectives for future work.
+
+\section{Related Work}
+
+The evaluation of LLMs in specific scenarios aims to understand their performance in problem-solving, both nationally and internationally \cite{chen2021evaluating, mendonca2024evaluating, viegas2025assessing, huang2024competition, zheng2025livecodebench, li2024evaluating, almeida2023bluex}. Despite the breadth of these studies, there is a literary gap to be explored regarding the application and evaluation of these tools in the specific context of problem-solving tests in the programming category of the Brazilian Olympiad in Informatics.
+
+Such evaluations are made possible by recent technical advances, based on scaling laws, which expanded the context window capacity of the models and refined prompt engineering techniques \cite{kaplan2020scaling, touvron2023llama, dair2025prompt, wei2021finetuned, brown2020language}. As a result of these innovations, studies such as the one by the DeepMind team with AlphaCode \cite{li2022competition} established a historical milestone, demonstrating the feasibility of generating solutions to competitive programming problems with high assertiveness on the Codeforces platform, one of the largest and most rigorous global environments for programming competitions and automated algorithm evaluation.
+
+Finally, although models show promising performance in direct code generation, the goal of using them as mediators in the teaching-learning process can be challenging. Since there are different student profiles that require distinct pedagogical approaches to overcome learning difficulties \cite{baist2017analysis}, the autonomous use of AI can become frustrating without proper mediation. Because of this, a critical look is strictly necessary not only at the raw performance of the models but at how their gaps affect the support for programming education.
+
+\sectionsection{Methodology}
+
+This section describes the automated experimental environment developed to evaluate the capability of language models in the automatic resolution of programming problems inspired by the OBI context. The goal of the methodology is to guarantee a systematic, reproducible, and comparable process for analyzing the models' performance.
+
+To reduce variations in the experimental process, a standardized prompt format was used with the problem statement; in addition to the input and output specification; and finally the instructions to generate a complete code solution.
+
+\subsection{System Overview}
+
+The system was designed to be simple and automated so that, upon selecting the programming language (C++ or Python) and the prompt technique (Zero-Shot or Few-Shot), the model produces code that will be subsequently evaluated based on the official answer key. To this end, a coding agent (LLM) and a computational judge are used to streamline the benchmarking of models in solving OBI problems from 2000 to 2025.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/1.png}
+\caption{System pipeline}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Problem Dataset}
+
+To conduct the experiments, a problem dataset was built from the official website of the Brazilian Olympiad in Informatics (OBI). The compilation and structuring of this dataset were automated through a pipeline developed in Python, consisting of the following five steps:
+
+\begin{itemize}
+    \item \textbf{Data Collection (Web Scraping):} Download of the test booklets (covering all levels, from 2000 to 2025) using the \textit{requests} library to request page content and \textit{BeautifulSoup} to extract links.
+    \item \textbf{Processing via LLM:} Submission of PDF files to the Gemini 3.1 Pro model for data extraction and structuring in JSON format. The generated fields included: title, statement, input, output, constraints, examples, score, year, level, period, and difficulty (the latter attribute inferred by the model itself).
+    \item \textbf{Test Case Obtainment:} Download of official answer keys (.zip files) corresponding to each question to extract expected inputs and outputs.
+    \item \textbf{File Mapping:} Organization and linking of extracted test cases to their respective problems in the automatic judge directory.
+    \item \textbf{Cleaning and Validation:} Removal of residual files and summary exclusion of questions that did not have an exact match with the input and output files, ensuring integrity for evaluation in the judge.
+\end{itemize}
+
+After consolidating the database, an exploratory analysis of the dataset was performed, classifying the problems under two main criteria: (i) difficulty level (easy, medium, and hard); and (ii) algorithmic domain, covering topics such as graphs, dynamic programming, greedy algorithms, and string processing, among others \cite{obi2026}.
+
+At the end of the process, a manual analysis was performed to ensure the correctness of the answer keys and to add the images of the respective questions. Thus, the problem dataset obtained a validated sample of 493 questions in JSON format \cite{anonimo2026}.
+
+\subsection{Evaluated Models}
+
+The experiments were conducted using different multimodal language models, which are capable of generating programming code from textual descriptions and images. The initial selection of the used models (Claude Sonnet 4.6, Gemini 3.1 Pro, GPT 5.4, Mistral Small 4, Grok 4.20) aimed to evaluate the impact of problem statement images on code generation. Subsequently, a second selection of models (Claude Sonnet 4.6, Gemini 3.1 Pro, GPT 5.4, DeepSeek-V3.2, Glm 5, Step 3.5 Flash, Grok Code Fast 1, and Mistral Small 4) was performed with the objective of verifying different architectural approaches, reflecting not only visual understanding but the current general landscape of generative artificial intelligence applied to competitive programming.
+
+\subsection{Evaluation Environment}
+
+An automated experimental environment was developed, responsible for managing the entire evaluation process of the solutions generated \cite{obibenchmarking2026} by the models. The environment performs the following steps during execution: choice of output environment; execution of a specific year for OBI questions; selection of a problem from the database in JSON format; sending the statement to the language model; receiving the generated code; compilation and execution of the code; and automatic evaluation using the test cases.
+
+The verification of solutions is performed by comparing the output produced by the AI model's program and the expected output defined in the problem's test cases (Judge). Each solution is classified according to categories common in automatic judge systems, such as:
+
+\begin{itemize}
+    \item \textbf{Accepted (AC):} correct solution;
+    \item \textbf{Wrong Answer (WA):} incorrect output;
+    \item \textbf{Compilation Error (CE):} compilation error;
+    \item \textbf{Runtime Error (RE):} error during execution;
+    \item \textbf{Time Limit Exceeded (TLE):} exceeded time limit.
+\end{itemize}
+
+Since the problem booklets do not specify the execution time limit for the tests, the test cases were standardized to 1 second for the C++ language and to 3 seconds for the Python language. This difference is due to the paradigms in which both languages are inserted in the computational context. While the C++ language has its execution time optimized due to the use of a compiler, Python is executed line by line. Thus, in the competitive programming scenario, interpreted languages have a higher time limit than compiled languages.
+
+\section{Experiments}
+
+The conduct of the experiments involved the orchestration of API calls to the LLMs using a temperature equal to 0, with \textit{top\_p} and \textit{max\_tokens} kept at their default values so as not to restrict the output size. In addition, the process included submission to the automatic judge and measurement of the execution time of submitted solutions. The hardware environment used in these experiments consists of a 13th generation Intel Core i7-1360P processor (2.20 GHz), 16 GB of RAM (4800 MT/s), and integrated Intel Iris Xe graphics accelerator, operating under the Windows 11 Home (64 bits) system.
+
+Thus, Section 4.1 and Section 4.2 present a preliminary experiment conducted to determine the optimal generation settings. In this stage, the performance of multimodal models regarding the use of images was evaluated, as well as the performance of Python and C++ languages, and the effectiveness of prompting strategies (zero-shot versus few-shot), since the choice of these parameters directly and significantly affects the accuracy and efficiency results of the models evaluated in this study.
+
+\subsection{Verification of Images in Statements}
+
+Before starting the environment preparation, a verification of the multimodal models was necessary to understand the impact that images have on code generation. When the statement contains references to images, as exemplified in Figure \ref{fig:representacao}, these are converted to Base64 format during the prompt construction. In this way, multimodal models can extract visual information that may influence code generation and, consequently, the success rate.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/2.png}
+\caption{Representation of the statement for LLM models}
+\label{fig:representacao}
+\end{figure}
+
+With this, the problem dataset has 181 questions with images, being 67 easy, 81 medium, and 33 hard. By analyzing the codes generated by the models with the number of correct answers according to the judge, it is visible that there was no significant gain in ACs.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/3.png}
+\caption{Statistics of statements with and without images}
+\label{fig:tabela1}
+\end{figure}
+
+Furthermore, a considerable increase in code generation time was noted, as well as higher token consumption and increased average prompt cost. For this reason, the final experiment configuration adopts only texts, since, as illustrated in Figure \ref{fig:tabela1}, there are no guarantees that providing images produces a substantial positive impact on the quality of the generated code.
+
+\subsection{Experiment Environment Preparation}
+
+Using only the statements, the experiment seeks to verify simple prompt techniques such as zero-shot and few-shot for a better understanding of the models' performance for basic prompt techniques, attempting to solve 299 questions from the problem dataset, being 126 easy, 118 medium, and 55 hard. Because of this, in Kaplan et al. (2020) \cite{kaplan2020scaling}, scaling laws for language models were established, demonstrating that increasing parameters and computational power positively impacts overall performance. From this scalability, few-shot learning capabilities became viable in LLMs. However, Touvron et al. (2023) \cite{touvron2023llama} brought a new perspective with the development of LLaMA, showing that excellence in reasoning tasks (both in few-shot and zero-shot) does not depend exclusively on a massive scale of parameters, but on optimized training with a substantially larger volume of data.
+
+In the preliminary experiment of this study, these dynamics were observed in practice. It was found that the zero-shot approach presented frequent failures in the strict input and output formatting required by the automatic judge in the OBI 2015 questions. To mitigate this problem, the few-shot technique was adopted by providing three problem examples (involving graphs, simple addition, and matrix counting) to guide the coding agent. This behavior is consistent with the reviewed literature \cite{brown2020language}: the models used in this benchmark have sufficient architectural capacity to infer patterns from the prompt examples, significantly improving the understanding of the I/O (input/output) format before generating the solution, as illustrated in Figure \ref{fig:fewshot}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/4.png}
+\caption{Top 5 test case success rates in the judge relative to programming language and prompt engineering technique}
+\label{fig:top5}
+\end{figure}
+
+It should be noted that this preliminary experiment evaluated 511 test cases. The configuration that obtained the best performance among the top five evaluated models was the use of the Python language combined with the "few-shot" technique. Consequently, this was the methodological configuration adopted for the main evaluation of the present article.
+
+\subsection{Evaluation Metrics}
+
+For the evaluation of the models' performance against the database composed of 299 OBI questions, metrics were defined to measure both algorithmic resolution efficacy and computational and financial efficiency. The comparative analysis is based on the following indicators:
+
+\begin{itemize}
+    \item \textbf{Success Rate (Accuracy):} Proportion of solutions that obtained full approval in all automatic judge test cases, stratified by the three problem difficulty levels.
+    \item \textbf{Token Consumption:} Average of trafficked tokens (summing the input prompt and the generated solution) per problem.
+    \item \textbf{API Cost:} Estimate of the average financial expenditure per request for code generation.
+    \item \textbf{Inference Latency:} Average time elapsed for the complete generation of the code by the model.
+\end{itemize}
+
+\section{Results and Discussions}
+
+\subsection{Performance Overview}
+
+This section presents a global analysis of the results obtained in the submission of the 299 questions to the automatic judge. The objective of this initial survey is to provide an overview of the actual capabilities and limitations of the evaluated tools, considering not only the absolute success rate but also the practical feasibility in terms of latency and financial cost.
+
+The evaluation of the 299 questions revealed that part of the models failed to generate syntactically valid codes, a phenomenon observed predominantly in hard-level problems. This result shows that the high algorithmic complexity inherent to competitive programming still represents a substantial barrier to the capacity of executable code synthesis by these tools.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/5.png}
+\caption{Experiment execution statistics}
+\label{fig:tabela2}
+\end{figure}
+
+Additionally, the analysis indicated the absence of a direct correlation between inference cost and algorithmic performance in the automatic judge (judge). Higher financial cost models did not necessarily present the highest success rates. In this context, according to the data in Figure \ref{fig:tabela2}, the GPT 5.4 and Grok Code Fast 1 models stood out for their low latency, configuring themselves as suitable and agile options for solving easy and medium-level problems.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/6.png}
+\caption{Success rate in dynamic programming and graphs topics}
+\label{fig:topicos}
+\end{figure}
+
+It is noted that for graph and dynamic programming problems, the models' performance was substantially lower. Since only the Gemini 3.1 Pro model obtained a success rate of 50.70\%, it consolidates itself as the most recommended model to deal with these specific topics.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/7.png}
+\caption{Benchmarking LLM models solving questions}
+\label{fig:tabela3}
+\end{figure}
+
+Finally, the Gemini 3.1 Pro model demonstrated the best cost-benefit ratio of the experiment. The tool reached the highest overall success rates in the judge, maintaining a competitive average cost compared to models like Claude Sonnet 4.6 and GLM 5. Its only significant limitation was latency, registering the third-highest average generation time per problem. In contrast, the Mistral Small 4 model presented the lowest performance of the study. On the opposite spectrum, the Step 3.5 Flash Free model stood out positively by achieving success rates comparable or superior to those of paid commercial models, despite operating with a reduced architecture of 11 billion active parameters.
+
+\subsection{Success Rate by Difficulty Levels}
+
+The coding agents had a performance considered high for easy questions (above 81\%, except Mistral Small 4) and medium (above 59\%, except Mistral Small 4), because they are less complex problems that frequently do not require advanced input preprocessing or require the application of only a basic programming technique to reach the expected output.
+
+However, since LLMs still have some difficulty in achieving full coverage in hard questions, it shows that seeking knowledge in LLMs is not guaranteed to answer the question, especially for competitive programming questions. Thus, structured interventions to deal with complex concepts, requiring targeted pedagogical approaches for each student profile \cite{baist2017analysis}, are strictly necessary when integrating Artificial Intelligence into education.
+
+Therefore, this scenario is evidenced by the performance data of the Claude Sonnet 4.6 model itself, which, although reaching success rates of 84.92\% and 77.97\% in easy and medium-level problems, suffers an abrupt drop to only 42.62\% in hard questions. This demonstrates that Artificial Intelligence is evolving in transitioning from basic syntax to complex algorithmic reasoning, but caution is needed.
+
+\section{Conclusion}
+
+This article presented a comprehensive experimental evaluation of the capability of different Large Language Models (LLMs) in solving programming problems, using the Brazilian Olympiad in Informatics (OBI) as a benchmark. The automated environment developed allowed quantifying not only the syntactic correctness of the generated code but also the logical and algorithmic efficacy against rigorous test cases.
+
+The results demonstrate that models such as GLM 5, Sonnet 4.6, Step 3.5 Flash Free, GPT 5.4, and DeepSeek V3.2 present mastery in basic and intermediate-level problems. However, there is a sharp degradation in performance in questions requiring complex algorithmic reasoning, specifically in graphs and dynamic programming. This difficulty can be attributed to the autoregressive generation mechanism of LLMs: by producing an output token by token, from left to right, the model has limitations in backtracking and correcting complex logic previously built in the same iteration. Furthermore, the linearity of code generation directly impacts the occurrence of compilation errors and problems in time and memory management.
+
+The investigation also revealed that the multi-agent approach, observed in the Grok Code Fast 1 model, outperformed single-agent configurations in initial exploration scenarios. For OBI competitive programming problems, single-agent-based models make more coding errors due to the large length of the statements, the requirement for deep logical reasoning, and the need for absolute syntactic rigor. The division of the problem into specialized sub-agents, a mechanism adopted by Grok Code Fast 1, manages to optimize these steps and achieves a success rate of 92.06\% in easy-level questions. On the other hand, Gemini 3.1 Pro Preview stood out for its technical consistency in overall resolution, especially with the Python language. It was also shown that the use of few-shot prompting acts as an essential strategy to mitigate I/O formatting errors, even though the increased context may introduce additional latency in the inference process.
+
+Ultimately, this study reaffirms that, despite the potential of LLMs as support tools, human expertise in competitive programming remains indispensable. Current models work better as productivity assistants than as autonomous solvers of complex problems.
+
+As a development of this research, it is proposed to expand the experimental evaluation to an olympiad question bank with a wider variety of problems and different styles, such as the initiation modality.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
