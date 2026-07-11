@@ -134,10 +134,8 @@ class Orchestrator:
 
                 if sol_file and sol_file.exists():
                     try:
-                        with open(in_file, 'r', encoding='utf-8') as f:
-                            in_content = f.read()
-                        with open(sol_file, 'r', encoding='utf-8') as f:
-                            sol_content = f.read()
+                        in_content = self._read_text_file(in_file)
+                        sol_content = self._read_text_file(sol_file)
                         
                         test_cases.append((in_content, sol_content))
                     except Exception as e:
@@ -155,6 +153,18 @@ class Orchestrator:
         name = name.replace(':', '_')
         
         return name
+
+    def _read_text_file(self, path: Path) -> str:
+        encodings = ("utf-8", "utf-8-sig", "cp1252", "latin-1")
+
+        for encoding in encodings:
+            try:
+                return path.read_text(encoding=encoding)
+            except UnicodeDecodeError:
+                continue
+
+        print(f"Aviso: usando fallback de decodificação para {path}")
+        return path.read_text(encoding="utf-8", errors="replace")
         
     
     def get_examples_of_problem(self, examples: list[Problem]) -> str:
@@ -327,7 +337,7 @@ class Orchestrator:
                     else:
                         print("Erro ao criar o resultado da LLM!!!")
                 else:
-                    code = path_code_questios.read_text()
+                    code = self._read_text_file(path_code_questios)
                     print("Código dessa questão já foi criado!!!")
                 
                 test_cases = self.get_test_cases("database/", name_problem, [])
