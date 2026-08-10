@@ -30,7 +30,7 @@ def execute_problems_with_imgs(problems: list):
 def main():
     
     try:
-        print_partition("CRIANDO DATABASE")
+        print_partition("PEGANDO OS PATHS DO database/")
         
         path_database = Path("database")
         questions_path = []
@@ -54,7 +54,7 @@ def main():
             print("Não existe questões no diretório database")
             exit(1)
         
-        print_partition("FIM DA CRIAÇÃO DATABASE")
+        print_partition("FIM PEGANDO OS PATHS DO database/")
     except Exception as e:    
         print("Erro na estrutura database. Verifique o diretorio!")
         print("Erro: ", e)
@@ -159,7 +159,7 @@ def main():
         print_partition(text=f"EXECUÇÃO SERÁ COM {len(problems_execute)} QUESTÕES")
         
         orchestrador = Orchestrator(type=type_prompt, language=language, use_images=use_images, output_path=output_path)
-        if orchestrador.execute(problems=problems_execute):
+        if orchestrador.execute(problems_path=problems_execute):
             print("Resultado está em output/results/")
             print_partition("REINICIANDO")
         else:

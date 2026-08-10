@@ -26,7 +26,7 @@ class Orchestrator:
         elif language == "cpp":
             self.__format_file_code = "cpp"
 
-    def __load_problem(file_path: Path) -> Problem:
+    def __load_problem(self, file_path: Path) -> Problem:
         data = json.loads(file_path.read_text(encoding="utf-8"))
         print("Carregando file: ", file_path)
         
@@ -157,6 +157,7 @@ class Orchestrator:
 
     def normalize_model_name(self, model):
         name = model.replace('/', '_')
+        name = name.replace('\\', '_')
         name = name.replace('.', '_')
         name = name.replace('-', '_')
         name = name.replace(':', '_')
@@ -259,6 +260,7 @@ class Orchestrator:
             judge_service = JudgeService(language=self.__language)
 
             results = []
+            index_by_name = {}
 
             path_results = Path(
                 f"output/{self.__output_path}/results/results_{self.normalize_model_name(model)}_{self.__language}_{self.__type}_{self.__img_mode}.csv")
@@ -269,7 +271,6 @@ class Orchestrator:
                 registros = df.to_dict('records')
                 
                 i = 0
-                index_by_name = {}
                 for row in registros:
                     print(row)
                     results.append(EvaluationResult(**row))
@@ -278,7 +279,8 @@ class Orchestrator:
 
             for name_problem, problem_path in problems_path:
                 
-                problem = self.__load_problem(problem_path=Path(problem_path))
+                print(problem_path)
+                problem = self.__load_problem(file_path=problem_path)
                 
                 print(f"Processando questão: {name_problem}")
                 
@@ -321,6 +323,14 @@ class Orchestrator:
                     
                     if code is None:
                         judge_predict = "NO CODE"
+                    else:
+                        if self.create_file(name = f"{name_problem}.{self.__format_file_code}",
+                                         base = f"output",
+                                         model = self.normalize_model_name(model),
+                                         content = code):
+                            print("Código criado com sucesso")
+                        else:
+                            print("Erro ao criar o código")
                     
                     evaluation = EvaluationResult(
                                         question_name=name_problem,
@@ -338,7 +348,7 @@ class Orchestrator:
                                         total_test_cases=0
                                     )
                     
-                    if name_problem in index_by_name.keys():
+                    if index_by_name.keys() is not None and name_problem in index_by_name.keys():
                         results[index_by_name[name_problem]] = evaluation
                     else:
                         results.append(evaluation)
