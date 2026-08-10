@@ -1,9 +1,9 @@
-\documentclass[sigconf,anonymous]{acmart} % Adicionado 'anonymous' para a fase de revisão
+\documentclass[sigconf]{acmart}
 \settopmatter{printacmref=false}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \setcopyright{none}
 
-\acmConference[ISE 2026]{Workshop on Intelligent Software Engineering}{September 11, 2026}{São Paulo, SP, Brazil}
+\acmConference[ISE 2026]{5th Brazilian Workshop on Intelligent Software Engineering}{September 11, 2026}{São Paulo, SP, Brazil}
 
 \AtBeginDocument{
     \providecommand\BibTeX{{Bib\TeX}}
@@ -12,6 +12,7 @@
 \usepackage{graphicx}
 \usepackage[brazilian]{babel}
 \usepackage{pgfplots}
+\usepackage{float}
 \pgfplotsset{compat=1.18}
 
 \renewcommand\abstractname{Resumo}
@@ -20,6 +21,7 @@
 
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Tabela}
+\hypersetup{hidelinks}
 
 \begin{document}
 
@@ -29,15 +31,50 @@
 % NOTA: Mantenha os autores COMENTADOS durante a submissão!
 % Descomente apenas quando o artigo for aprovado (Camera-ready)
 % ------------------------------------------------------------
-% \author{Victor Hugo Silva Ângelo}
-% \affiliation{
-%   \institution{Instituto da Computação - Universidade Federal de Alagoas}
-%   \city{Maceió}
-%   \country{Brasil}
-% }
-% \email{vhsa@ufal.ic.br}
+%Principal
+\author{Victor Hugo S. Ângelo}
+\affiliation{
+\institution{Instituto da Computação - Universidade Federal de Alagoas}
+\city{Maceió}
+\country{Brasil}
+}
+\email{vhsa@ufal.ic.br}
 
-\renewcommand{\shortauthors}{Ângelo}
+\author{Lucas Heron S. Anchieta}
+\affiliation{
+\institution{Instituto da Computação - Universidade Federal de Alagoas}
+\city{Maceió}
+\country{Brasil}
+}
+\email{lhsa@ic.ufal.br}
+
+\author{Matheus Ryan S. Nascimento}
+\affiliation{
+\institution{Instituto da Computação - Universidade Federal de Alagoas}
+\city{Maceió}
+\country{Brasil}
+}
+\email{mrysn@ic.ufal.br}
+
+\author{Ricardo Vinicius A. Fernandes}
+\affiliation{
+\institution{Instituto da Computação - Universidade Federal de Alagoas}
+\city{Maceió}
+\country{Brasil}
+}
+\email{rvaf@ic.ufal.br}
+
+    
+%Orientador
+\author{Evandro de B. Costa}
+\affiliation{
+\institution{Instituto da Computação - Universidade Federal de Alagoas}
+\city{Maceió}
+\country{Brasil}
+}
+\email{evandro@ic.ufal.br}
+
+\renewcommand{\shortauthors}{Ângelo et al.}
 \renewcommand{\shorttitle}{Resolução de Problemas da OBI com LLMs Multimodais}
 
 \begin{abstract}
@@ -80,9 +117,9 @@ Para reduzir variações no processo experimental, foi utilizado um formato padr
 
 O sistema foi projetado para ser simples e automatizado, de forma que, ao escolher entre as linguagens de programação (C++ ou Python) e técnicas de prompt (Zero-Shot \cite{wei2021finetuned} ou Few-Shot \cite{brown2020language}), o sistema deve produzir um código que será averiguado por meio do gabarito. Assim, haverá um agente codificador (LLM Multimodal) e um avaliador (\textit{Judge}) para a dinamização do \textit{benchmarking} dos modelos utilizados para resolver os problemas da OBI de 1999 a 2025, disponíveis no site~\cite{obi_passadas}, conforme ilustrado na Figura~\ref{fig:arquitetura}.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{samples/arquitetura-experimental-preto.png}
+  \includegraphics[width=0.85\linewidth]{samples/arquitetura-experimental-preto.png}
   \caption{Arquitetura Experimental para Resolução de Problemas de Programação da OBI.}
   \Description{Arquitetura Experimental}
   \label{fig:arquitetura}
@@ -91,13 +128,13 @@ O sistema foi projetado para ser simples e automatizado, de forma que, ao escolh
 \subsubsection{Banco de Problemas}
 \label{sec:Banco de Problemas}
 \paragraph{Para a realização do experimento,}
-foi construído um banco de problemas (\textit{dataset}) a partir do site oficial da Olimpíada Brasileira de Informática (OBI), utilizando \textit{script} em Python e convertendo os cadernos de questões na modalidade de programação em arquivos JSON por meio do modelo Gemini 3.1 Pro. As questões extraídas, as provas e os gabaritos estão disponíveis no seguinte repositório: \url{https://anonymous.4open.science/r/problems-of-the-obi-F517/README.md}.
+foi construído um banco de problemas (\textit{dataset}) a partir do site oficial da Olimpíada Brasileira de Informática (OBI), utilizando \textit{script} em Python e convertendo os cadernos de questões na modalidade de programação em arquivos JSON por meio do modelo Gemini 3.1 Pro. As questões extraídas, as provas e os gabaritos estão disponíveis no seguinte repositório: \cite{gema2026problems}.
 
 \subsubsection{Camada Service}
 \label{sec:Camada de Service}
 \paragraph{Para o funcionamento do sistema,} foi necessário criar dois \textit{services} que se comunicam com o ambiente externo da arquitetura. O \textit{service} do LLM tem como objetivo realizar requisições à API das LLMs, calculando o custo total do prompt, além do total de tokens gastos e o código gerado pelas LLMs. Entretanto, o \textit{service} do \textit{Judge} tem como objetivo avaliar o código por meio de \textit{subthreads}, executando os casos de teste diretamente no ambiente de processamento. Com isso, o ambiente deve conter o \texttt{g++} e algum interpretador Python para garantir a automatização do processo. Além disso, o \textit{Judge} informa o status final da questão, a quantidade de acertos e de outros tipos de erros, e o tempo máximo de execução entre todos os casos de teste.
 
-\subsubsection{Orquestrador e configuração}
+\subsubsection{Orquestrador e Configuração}
 \label{sec:Orquestrador e configuração}
 \paragraph{Para garantir a execução contínua,} criou-se um orquestrador para executar no momento em que o usuário escolher uma configuração para execução da automatização. Esse orquestrador tem como objetivo executar as seguintes tarefas: criação e edição de arquivos; carregamento dos casos de teste da questão; validação do código; carregamento das imagens; e iteração com as questões da OBI para cada LLM.
 Além disso, é importante a configuração de variáveis de ambiente para a conexão com as LLMs. Para garantir o funcionamento, é necessário informar: \texttt{NOME\_\_API\_KEY} (chave da API), \texttt{NOME\_\_BASE\_URL} (URL de comunicação), \texttt{NOME\_\_MODEL\_NAME} (nome do modelo) e os valores de custo por token (\texttt{NOME\_\_INPUT\_PRICE} e \texttt{NOME\_\_OUTPUT\_PRICE}).
@@ -118,23 +155,21 @@ No intuito de avaliar a capacidade das LLMs multimodais, foi necessário separar
 
 Na configuração utilizada, o código deve ser produzido na linguagem Python com a técnica de \textit{prompt zero-shot}~\cite{wei2021finetuned}. Dessa forma, a imagem é inserida no prompt no formato Base64, com referências ao longo do enunciado, como ilustrado na Figura~\ref{fig:enunciado-vertical}.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{samples/enunciado-prompt-horizontal.png}
+  \caption{Formatação do Enunciado com Imagens em Base64.}
+  \label{fig:enunciado-vertical}
+\end{figure}
+
 Com isso, seguindo o pipeline ilustrado na Figura~\ref{fig:pipeline-questão}, para cada questão, o enunciado (com imagens em Base64, conforme Figura~\ref{fig:enunciado-vertical}) é inserido no template do prompt. O agente gera um arquivo em Python, e o \textit{Judge} valida os casos de teste salvando os resultados em um arquivo CSV.
 
-\begin{figure*}[ht]
+\begin{figure}[H]
   \centering
-  \begin{minipage}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{samples/enunciado-prompt-horizontal.png}
-    \caption{Formatação do Enunciado com Imagens em Base64.}
-    \label{fig:enunciado-vertical}
-  \end{minipage}\hfill
-  \begin{minipage}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{samples/pipeline.png}
-    \caption{Pipeline de Execução para cada Questão.}
-    \label{fig:pipeline-questão}
-  \end{minipage}
-\end{figure*}
+  \includegraphics[width=0.9\linewidth]{samples/pipeline.png}
+  \caption{Pipeline de Execução para cada Questão.}
+  \label{fig:pipeline-questão}
+\end{figure}
 
 Por fim, o ambiente deve ter acesso à internet para requisições, juntamente com um interpretador Python. O ambiente de \textit{hardware} é constituído por um processador Intel Core i7-1360P de 13ª geração (2,20 GHz), 16 GB de memória RAM (4800 MT/s) e acelerador gráfico integrado Intel Iris Xe, operando sob o sistema Windows 11 Home (64 bits).
 
@@ -146,12 +181,14 @@ Esta seção tem como objetivo apresentar os resultados do experimento executado
 
 O desempenho em relação à taxa de acerto para questões de nível fácil (acima de 77\%) e de nível médio (acima de 67\%) é considerado alto, como visto na Tabela~\ref{tab:desempenho_modelos_sem_imagens}, destacando-se os modelos Claude Sonnet 4.6, GPT 5.4 e Gemini 3.1 Pro. Entretanto, apenas o modelo Gemini 3.1 Pro obteve um desempenho satisfatório para questões consideradas difíceis. Vale ressaltar que este modelo também exigiu o maior tempo de processamento para a geração da resolução e o maior custo médio. Com isso, uma característica observada durante o experimento é que os modelos ainda têm dificuldades cognitivas para a resolução de problemas complexos. Um simples \textit{prompt} em configuração \textit{zero-shot} pedindo para resolver a questão não foi suficiente para passar no gabarito, pois uma característica intrínseca da programação competitiva é a necessidade de prever casos extremos (\textit{corner cases}) de entrada e saída.
 
-\begin{table*}[htbp]
+\begin{table}[H]
+  \centering
   \caption{Comparativo de Desempenho dos Modelos Multimodais sem Imagens}
   \label{tab:desempenho_modelos_sem_imagens}
+  \resizebox{\columnwidth}{!}{%
   \begin{tabular}{l c c c c c c}
     \toprule
-    \textbf{Modelo} & \textbf{Fácil AC (\%)} & \textbf{Médio AC (\%)} & \textbf{Difícil AC (\%)} & \textbf{Tokens I/O (Média)} & \textbf{Custo Médio (US\$)} & \textbf{Tempo Médio (s)} \\
+    \textbf{Modelo} & \textbf{Fácil AC (\%)} & \textbf{Médio AC (\%)} & \textbf{Difícil AC (\%)} & \textbf{Tokens I/O (Média)} & \textbf{Custo (US\$)} & \textbf{Tempo (s)} \\
     \midrule
     Claude Sonnet 4.6 & 77.61 & 74.07 & 36.36 & 1698 & 0.0121 & 9 \\
     GPT 5.4           & 80.60 & 67.90 & 27.27 & 1123 & 0.0059 & 4 \\
@@ -159,20 +196,23 @@ O desempenho em relação à taxa de acerto para questões de nível fácil (aci
     Grok 4.20         & 61.19 & 53.09 & 18.18 & 1958 & 0.0078 & 9 \\
     Mistral Small 4   & 58.21 & 48.15 & 9.09  & 1212 & 0.0016 & 3 \\
     \bottomrule
-  \end{tabular}
-\end{table*}
+  \end{tabular}%
+  }
+\end{table}
 
 \subsection{Resultados dos Enunciados Com Imagens}
 \label{subsec:resultados_com_imagens}
 
 Ao aumentar o nível de complexidade do \textit{prompt} com a adição de imagens, apenas o modelo Gemini 3.1 Pro manteve os mesmos percentuais da Tabela~\ref{tab:desempenho_modelos_sem_imagens}. No entanto, ao analisar os demais modelos multimodais, observou-se um aumento na taxa de acerto para questões de nível fácil. Entretanto, para questões de nível médio, os modelos Gemini 3.1 Pro e Grok 4.20 mantiveram o mesmo desempenho, o GPT 5.4 obteve leve aumento, e os demais apresentaram queda na taxa de acerto. Além disso, para questões de nível difícil, apenas os modelos Gemini 3.1 Pro, GPT 5.4 e Mistral Small 4 conseguiram acertar mais questões utilizando o contexto visual. Isso evidencia que o aumento da complexidade do \textit{prompt} não é garantia de resolução para questões de níveis médio e difícil, como demonstrado na Tabela~\ref{tab:desempenho_modelos_com_imagens}, embora possa servir como um guia para a modelagem da solução.
 
-\begin{table*}
+\begin{table}[H]
+  \centering
   \caption{Comparativo de Desempenho dos Modelos Multimodais com Imagens}
   \label{tab:desempenho_modelos_com_imagens}
+  \resizebox{\columnwidth}{!}{%
   \begin{tabular}{l c c c c c c}
     \toprule
-    \textbf{Modelo} & \textbf{Fácil AC (\%)} & \textbf{Médio AC (\%)} & \textbf{Difícil AC (\%)} & \textbf{Tokens I/O (Média)} & \textbf{Custo Médio (US\$)} & \textbf{Tempo Médio (s)} \\
+    \textbf{Modelo} & \textbf{Fácil AC (\%)} & \textbf{Médio AC (\%)} & \textbf{Difícil AC (\%)} & \textbf{Tokens I/O (Média)} & \textbf{Custo (US\$)} & \textbf{Tempo (s)} \\
     \midrule
     Claude Sonnet 4.6 & 83.58 & 71.60 & 30.30 & 2049 & 0.0148 & 12 \\
     GPT 5.4           & 82.09 & 69.14 & 30.30 & 1329 & 0.0065 & 4 \\
@@ -180,8 +220,9 @@ Ao aumentar o nível de complexidade do \textit{prompt} com a adição de imagen
     Grok 4.20         & 73.13 & 53.09 & 15.15 & 1792 & 0.0061 & 7 \\
     Mistral Small 4   & 61.19 & 41.98 & 12.12 & 1456 & 0.0018 & 3 \\
     \bottomrule
-  \end{tabular}
-\end{table*}
+  \end{tabular}%
+  }
+\end{table}
 
 \subsection{Desempenho em Tópicos Avançados}
 \label{subsec:desempenho_em_topicos}
@@ -194,8 +235,8 @@ Cabe ressaltar que, para o \textit{Judge} aceitar uma submissão, o código deve
     \begin{axis}[
         ybar=0pt,
         width=\columnwidth,
-        height=7cm,
-        bar width=15pt,
+        height=5.2cm,
+        bar width=11pt,
         enlarge x limits=0.15,
         ymin=0, ymax=100,
         ytick={0, 20, 40, 60, 80, 100},
@@ -248,14 +289,14 @@ Cabe ressaltar que, para o \textit{Judge} aceitar uma submissão, o código deve
 \section{Conclusão e Trabalhos Futuros}
 \label{sec:conclusao}
 
-Este trabalho apresentou uma arquitetura automatizada e um banco inédito de 493 questões para \textit{benchmarking} de MLLMs na OBI. Os experimentos com 181 problemas multimodais (\textit{zero-shot}, Python) indicam que a inclusão de imagens auxilia na compreensão semântica --- beneficiando questões de nível fácil e tópicos avançados na maioria dos modelos ---, mas não é suficiente para superar limitações em raciocínios algorítmicos complexos. A tensão entre o formato gerado pelos modelos probabilísticos e o determinismo do \textit{Judge} permanece como um desafio relevante na geração autônoma de código.
+Este trabalho apresentou uma arquitetura automatizada e um banco inédito de 493 questões para \textit{benchmarking} de MLLMs na OBI. Os experimentos com 181 problemas multimodais (\textit{zero-shot}, Python) indicam que a inclusão de imagens auxilia na compreensão semântica beneficiando questões de nível fácil e tópicos avançados na maioria dos modelos, mas não é suficiente para superar limitações em raciocínios algorítmicos complexos. A tensão entre o formato gerado pelos modelos probabilísticos e o determinismo do \textit{Judge} permanece como um desafio relevante na geração autônoma de código.
 
 Como trabalhos futuros, sugerimos a replicação em \textit{datasets} diversificados para validar a capacidade de generalização e a experimentação com outras linguagens (como C++). A adoção de técnicas avançadas de \textit{prompting} (ex: \textit{Few-Shot} e \textit{Chain-of-Thought}) aliada a fluxos iterativos de \textit{feedback} com o \textit{Judge} são caminhos promissores para melhorar as taxas de acerto e aproximar a avaliação ao fluxo real de resolução de problemas de programação e Engenharia de Software.
 
 
 \section*{Disponibilidade de Artefatos}
 
-A arquitetura experimental, juntamente com os códigos e dados utilizados nas avaliações, encontra-se disponível para fins de revisão em: \url{https://anonymous.4open.science/r/obi-benchmarking-1472/README.md}
+A arquitetura experimental, juntamente com os códigos e dados utilizados nas avaliações, encontra-se disponível para fins de revisão em: \url{https://github.com/GEMA-LAB/obi-benchmarking}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{sample-base}
