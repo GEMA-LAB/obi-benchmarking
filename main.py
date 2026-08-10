@@ -1,13 +1,5 @@
-import json
-from models.problem import Problem
 from pathlib import Path
 from core import Orchestrator
-
-def load_problem(file_path: Path) -> Problem:
-    data = json.loads(file_path.read_text(encoding="utf-8"))
-    print("Carregando file: ", file_path)
-    
-    return Problem(**data)
 
 def print_partition(text: str):
     print("="*70)
@@ -20,35 +12,6 @@ def get_int_input(text : str = "test") -> int:
         return number
     except Exception:
         return 0
-
-
-def execute_problems_by_year(problems: list, year: int, output_path: str = "default"):
-    
-    print_partition(text="ZERO-SHOT vs FEW-SHOT")
-    problems_year = []
-    
-    for name, problem in problems:
-        if int(problem.year) == year:
-            print("Nome da questão: ", name)
-            problems_year.append((name, problem))
-    
-    types = ['zero', 'few']
-    languages = ['python', 'cpp']
-    image_modes = [False, True]
-    
-    for t in types:
-        for lan in languages:
-            for use_img in image_modes:
-                img_label = "COM imagens" if use_img else "SEM imagens"
-                print_partition(f"Executando: {t} | {lan} | {img_label}")
-                orch = Orchestrator(type=t, language=lan, use_images=use_img, output_path=output_path)
-                if orch.execute(problems=problems_year):
-                    print("Resultado está em output/results/")
-                    print_partition("REINICIANDO")
-                else:
-                    exit(1)
-    
-    print_partition(text="FIM ZERO-SHOT vs FEW-SHOT")
     
 def execute_problems_with_imgs(problems: list):
     
@@ -79,14 +42,13 @@ def main():
                 if folder.is_dir():
                     questions_path.append(folder)
             
-            
             for path in questions_path:
                 problem_names.append(path.name)
             
             for question_path in questions_path:
                 path_test_cases = question_path / "test_cases"
                 if path_test_cases.exists():
-                    problems.append((question_path.name, load_problem(Path(question_path / "problem.json"))))
+                    problems.append((question_path.name, Path(question_path / "problem.json")))
         
         else:
             print("Não existe questões no diretório database")
@@ -135,19 +97,6 @@ def main():
     
     print_partition(text=f"Os resultados está em output/{output_path}")
     print_partition(text=f"NÚMERO DE QUESTÕES COM TEST CASES {len(problems)}")
-    while True:
-        print_partition(text="MENU")
-        
-        op = input("Quer executar um ano específico (y/n): ")
-        if op == 'y':
-            try:
-                year = int(get_int_input("Digite um ano entre 1999 a 2026: "))
-                execute_problems_by_year(problems, year, output_path)
-            except Exception as e:
-                print("Digite apenas números!!!")
-        else:
-            print_partition(text="FIM MENU")
-            break
     
     while True:
         print_partition(text="MENU")

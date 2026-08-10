@@ -8,6 +8,9 @@ import pandas as pd
 import os
 import glob
 import base64
+import json
+from models.problem import Problem
+
 
 class Orchestrator:
 
@@ -23,6 +26,12 @@ class Orchestrator:
         elif language == "cpp":
             self.__format_file_code = "cpp"
 
+    def __load_problem(file_path: Path) -> Problem:
+        data = json.loads(file_path.read_text(encoding="utf-8"))
+        print("Carregando file: ", file_path)
+        
+        return Problem(**data)
+    
     def __load_images_base64(self, problem_name: str, imgs_list: list) -> list[str]:
         """Read image files from database/{problem_name}/imgs/ and return as base64 strings."""
         images_base64 = []
@@ -224,7 +233,7 @@ class Orchestrator:
 
         return output
 
-    def execute(self, problems: list) -> bool:
+    def execute(self, problems_path: list) -> bool:
 
         timeout = 1.0
         
@@ -267,7 +276,10 @@ class Orchestrator:
                     index_by_name[row["question_name"]] = i
                     i += 1
 
-            for name_problem, problem in problems:
+            for name_problem, problem_path in problems_path:
+                
+                problem = self.__load_problem(problem_path=Path(problem_path))
+                
                 print(f"Processando questão: {name_problem}")
                 
                 path_code_questios = Path(f"output/{self.__output_path}/{self.normalize_model_name(model)}/{self.__type}/{self.__language}_{self.__img_mode}") / f"{name_problem}.{self.__format_file_code}"
