@@ -17,6 +17,7 @@
 \begin{document}
 
 \title{Experimental Evaluation of the Capability of LLMs in Solving Problems in the Programming Category of the Brazilian Olympiad in Informatics}
+% \thanks{The authors gratefully acknowledge the financial support by National Institute of Science and Technology in Artificial Intelligence in Education Unplugged (INCT IA.Edu) sponsored by Brazil's National Council for Scientific and Technological Development (CNPq), grant no. 408483/2024-5.}
 
 \author{\IEEEauthorblockN{1\textsuperscript{st} Victor Hugo S. Ângelo}
 \IEEEauthorblockA{\textit{Institute of Computing} \\
@@ -58,7 +59,7 @@ evandro@ic.ufal.br}
 \maketitle
 
 \begin{abstract}
-Large Language Models (LLMs) have demonstrated increasing capabilities in code generation, yet evaluating their performance in scenarios requiring complex algorithmic reasoning remains an open challenge. Competitive programming rigorously tests Artificial Intelligence by demanding semantic disambiguation, abstract computational modeling, and code optimization under strict time and memory constraints. This article presents a comprehensive experimental evaluation of the capacity of LLMs to solve programming problems within the context of the Brazilian Olympiad in Informatics (OBI). To this end, we developed an automated experimental environment using a curated dataset of OBI problems, categorized by difficulty and algorithmic scope, integrated with an automated judge for real-time code execution and validation. The benchmarking encompassed multiple state-of-the-art models, analyzing metrics such as correct resolution rate, compilation success, and performance across difficulty tiers. Results reveal that while models achieve high mastery in basic-level problems, they face significant degradation in advanced topics involving dynamic programming and graphs. Furthermore, the investigation demonstrates that multi-agent collaborative approaches outperform single-agent configurations, and that few-shot prompting is essential to align model outputs with strict formatting and I/O constraints. By mapping the current boundaries of these tools, this study provides a solid foundation for their future integration as pedagogical support in competitive programming education.
+Large Language Models (LLMs) have demonstrated increasing capabilities in code generation, yet evaluating their performance in scenarios requiring complex algorithmic reasoning remains an open challenge. Competitive programming rigorously tests Artificial Intelligence by demanding semantic disambiguation, abstract computational modeling, and code optimization under strict time and memory constraints. This article presents a comprehensive experimental evaluation of the capacity of LLMs to solve programming problems within the context of the Brazilian Olympiad in Informatics (OBI). To this end, we developed an automated experimental environment using a curated dataset of OBI problems, categorized by difficulty and algorithmic scope, integrated with an automated judge for real-time code execution and validation. The benchmarking encompassed multiple state-of-the-art models, analyzing metrics such as correct resolution rate, compilation success, and performance across difficulty tiers. Results reveal that while models achieve high mastery in basic-level problems, they face significant degradation in advanced topics involving dynamic programming and graphs. Furthermore, preliminary findings suggest that modular multi-agent architectures (such as Grok Code Fast 1) offer promising advantages in early problem decomposition, while few-shot prompting is essential to align model outputs with strict formatting and I/O constraints. By mapping the current boundaries of these tools, this study provides a solid foundation for their future integration as pedagogical support in competitive programming education.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -108,15 +109,17 @@ To conduct the experiments, a problem dataset was built from the official websit
 
 \begin{itemize}
     \item \textbf{Data Collection (Web Scraping):} Download of the test booklets (covering all levels, from 2000 to 2025) using the \textit{requests} library to request page content and \textit{BeautifulSoup} to extract links.
-    \item \textbf{Processing via LLM:} Submission of PDF files to the Gemini 3.1 Pro model for data extraction and structuring in JSON format. The generated fields included: title, statement, input, output, constraints, examples, score, year, level, period, and difficulty (the latter attribute inferred by the model itself). The exact prompt used for this extraction is detailed in Appendix \ref{apx:prompts}.
+    \item \textbf{Processing via LLM:} Submission of PDF files to the Gemini 3.1 Pro model for data extraction and structuring in JSON format. The generated fields included: title, statement, input, output, constraints, examples, score, year, level, period, and difficulty (with preliminary topic suggestions proposed during extraction). The exact prompt used for this extraction is detailed in Appendix \ref{apx:prompts}.
     \item \textbf{Test Case Obtainment:} Download of official answer keys (.zip files) corresponding to each question to extract expected inputs and outputs.
     \item \textbf{File Mapping:} Organization and linking of extracted test cases to their respective problems in the automatic judge directory.
     \item \textbf{Cleaning and Validation:} Removal of residual files and summary exclusion of questions that did not have an exact match with the input and output files, ensuring integrity for evaluation in the judge.
 \end{itemize}
 
-After consolidating the database, an exploratory analysis of the dataset was performed, classifying the problems under two main criteria: (i) difficulty level (easy, medium, and hard); and (ii) algorithmic domain, covering topics such as graphs, dynamic programming, greedy algorithms, and string processing, among others \cite{obi2026}.
+To ensure categorization reliability and prevent model inference bias, problem labeling followed a rigorous two-phase protocol: (i) initial metadata extraction and tentative topic tagging via LLM; followed by (ii) an exhaustive manual validation conducted by two experienced competitive programming researchers and OBI coaches. The experts audited each problem against the official OBI syllabus and competition tiers (Programação Júnior, Nível 1, and Nível 2), resolving discrepancies through consensus. Difficulty was formally grounded into three tiers: Easy (fundamental logic, basic I/O, conditionals, and simple loops), Medium (linear arrays, greedy heuristics, string manipulation, and standard sorting), and Hard (dynamic programming, advanced graph algorithms, and combinatorial search). Algorithmic domains were categorized in accordance with standard competitive programming taxonomy \cite{obi2026}.
 
-At the end of the process, a manual analysis was performed to ensure the correctness of the answer keys and to add the images of the respective questions. Thus, the problem dataset obtained a validated sample of 493 questions in JSON format \cite{anonimo2026}.
+At the end of this validation protocol, test cases were verified against official answer keys, and visual elements were curated, resulting in a validated sample of 493 questions in JSON format \cite{problems2026}.
+
+To ensure full reproducibility and support further academic research, the curated OBI problem dataset, test cases, prompt templates, and the automated judging execution environment are publicly accessible in our repository at \cite{obibenchmarking2026}.
 
 \subsection{Evaluated Models}\label{subsec:models}
 
@@ -140,7 +143,7 @@ Since the problem booklets do not specify the execution time limit for the tests
 
 \section{Experiments}\label{sec:experiments}
 
-The conduct of the experiments involved the orchestration of API calls to the LLMs using a pass@1, temperature equal to 0, with \textit{top\_p} and \textit{max\_tokens} kept at their default values so as not to restrict the output size. In addition, the process included submission to the automatic judge and measurement of the execution time of submitted solutions. The hardware environment used in these experiments consists of a 13th generation Intel Core i7-1360P processor (2.20 GHz), 16 GB of RAM (4800 MT/s), and integrated Intel Iris Xe graphics accelerator, operating under the Windows 11 Home (64 bits) system.
+The conduct of the experiments involved the orchestration of API calls to the LLMs using greedy decoding ($\text{temperature} = 0$, evaluated via $\text{pass}@1$), with \textit{top\_p} and \textit{max\_tokens} kept at their default values so as not to restrict the output size. Setting the temperature to zero enforces deterministic model outputs, establishing a stable and reproducible baseline that isolates algorithmic problem-solving capacity from sampling variance. While multi-sample evaluations such as $\text{pass}@k$ ($k > 1$) with non-zero temperatures provide insight into stochastic generation diversity, deterministic $\text{pass}@1$ directly mirrors realistic educational and automated grading contexts where a single authoritative solution is submitted. Extending the evaluation across non-deterministic temperatures, multi-seed repetitions, and confidence intervals represents an important avenue for future benchmarking. In addition, the process included submission to the automatic judge and measurement of the execution time of submitted solutions. The hardware environment used in these experiments consists of a 13th generation Intel Core i7-1360P processor (2.20 GHz), 16 GB of RAM (4800 MT/s), and integrated Intel Iris Xe graphics accelerator, operating under the Windows 11 Home (64 bits) system.
 
 Thus, Section \ref{subsec:verif_images} and Section \ref{subsec:exp_prep} present a preliminary experiment conducted to determine the optimal generation settings. In this stage, the performance of multimodal models regarding the use of images was evaluated, as well as the performance of Python and C++ languages, and the effectiveness of prompting strategies (zero-shot versus few-shot), since the choice of these parameters directly and significantly affects the accuracy and efficiency results of the models evaluated in this study.
 
@@ -245,6 +248,14 @@ Additionally, the analysis indicated the absence of a direct correlation between
 
 It is noted that for graph and dynamic programming problems, the models' performance was substantially lower. Since only the Gemini 3.1 Pro model obtained a success rate of 50.70\%, it consolidates itself as the most recommended model to deal with these specific topics.
 
+A detailed inspection of the automatic judge verdicts for dynamic programming and graph problems highlights specific systemic failure patterns:
+\begin{itemize}
+    \item \textbf{Suboptimal Complexity and Time Limit Exceeded (TLE):} In dynamic programming, models frequently generated naive exponential recursions without memoization or $O(N^2)$ table formulations where the constraints demanded $O(N \log N)$ or linear-time solutions, causing immediate TLE on larger subtasks.
+    \item \textbf{Incorrect State Formulations (WA):} In multi-state DP challenges (e.g., knapsack variants and interval scheduling), models often failed to correctly define boundary conditions or accumulated transition values improperly across subproblems.
+    \item \textbf{Graph Topology and Recursion Depth (RE/WA):} In graph problems, implementations in Python frequently triggered \texttt{RecursionError} on deep trees or dense graphs due to unconfigured recursion stack depths during Depth-First Search (DFS). In addition, models regularly struggled with 0-indexed versus 1-indexed graph representations and cycle detection in directed graphs.
+\end{itemize}
+These failure modes confirm that while LLMs readily master standard boilerplate syntax, autonomous reasoning over constrained, multi-step state spaces remains a formidable boundary.
+
 \begin{table}[htbp]
 \centering
 \caption{Benchmarking LLM models solving questions}
@@ -283,11 +294,15 @@ This article presented a comprehensive experimental evaluation of the capability
 
 The results demonstrate that models such as GLM 5, Sonnet 4.6, Step 3.5 Flash Free, GPT 5.4, and DeepSeek V3.2 present mastery in basic and intermediate-level problems. However, there is a sharp degradation in performance in questions requiring complex algorithmic reasoning, specifically in graphs and dynamic programming. This difficulty can be attributed to the autoregressive generation mechanism of LLMs: by producing an output token by token, from left to right, the model has limitations in backtracking and correcting complex logic previously built in the same iteration. Furthermore, the linearity of code generation directly impacts the occurrence of compilation errors and problems in time and memory management.
 
-The investigation also revealed that the multi-agent approach, observed in the Grok Code Fast 1 model, outperformed single-agent configurations in initial exploration scenarios. For OBI competitive programming problems, single-agent-based models make more coding errors due to the large length of the statements, the requirement for deep logical reasoning, and the need for absolute syntactic rigor. The division of the problem into specialized sub-agents, a mechanism adopted by Grok Code Fast 1, manages to optimize these steps and achieves a success rate of 92.06\% in easy-level questions. On the other hand, Gemini 3.1 Pro Preview stood out for its technical consistency in overall resolution, especially with the Python language. It was also shown that the use of few-shot prompting acts as an essential strategy to mitigate I/O formatting errors, even though the increased context may introduce additional latency in the inference process (see Appendix \ref{apx:fewshot_examples} for the specific formatting examples provided to the models).
+The exploratory evaluation also indicated that modular multi-agent frameworks, exemplified by Grok Code Fast 1, show competitive efficacy in early problem structuring, achieving a 92.06\% success rate on easy-tier problems. By distributing statement parsing, reasoning, and code generation across specialized sub-roles, multi-agent pipelines may mitigate early comprehension errors. Nevertheless, as this benchmark compared off-the-shelf systems rather than controlled ablations on identical base models, systematic ablation experiments remain essential to definitively isolate the benefits of multi-agent orchestration. On the other hand, Gemini 3.1 Pro Preview stood out for its technical consistency in overall resolution, especially with the Python language. It was also shown that the use of few-shot prompting acts as an essential strategy to mitigate I/O formatting errors, even though the increased context may introduce additional latency in the inference process (see Appendix \ref{apx:fewshot_examples} for the specific formatting examples provided to the models).
 
 Ultimately, this study reaffirms that, despite the potential of LLMs as support tools, human expertise in competitive programming remains indispensable. Because current models exhibit significant constraints in deep logical reasoning and strict formatting adherence, they are not yet suited to act as fully autonomous solvers of complex algorithmic problems. Instead, their true potential in education lies in their architectural integration as interactive, intelligent tutoring bots. By employing strategies such as multi-agent orchestration, few-shot prompting, and dynamic knowledge tracing, future smart education systems can leverage generative LLMs to mediate the learning process, providing personalized guidance, dynamic hints, and real-time feedback, rather than simply generating direct final answers. Recent empirical studies corroborate this vision; for example, Peng et al. \cite{peng2025enhancing} demonstrated that systems coupling LLMs with code assistants and dynamic feedback significantly outperform traditional methods in both learning gains and problem-solving accuracy.
 
 As a development of this research, it is proposed to expand the experimental evaluation to an olympiad question bank with a wider variety of problems and different styles, such as the initiation modality, and to actively develop intelligent tutor prototypes based on the architectural findings of this study.
+
+\section*{Acknowledgment}
+
+The authors gratefully acknowledge the financial support by National Institute of Science and Technology in Artificial Intelligence in Education Unplugged (INCT IA.Edu) sponsored by Brazil's National Council for Scientific and Technological Development (CNPq), grant no. 408483/2024-5, and Alagoas Research Foundation (FAPEAL), grant no. 60030.0000001481/2025.
 
 \appendices
 
@@ -392,7 +407,8 @@ Write a program that reads two integers and prints the sum.\\
 \textbf{Expected response:}
 \begin{verbatim}
 import sys
-a, b = map(int, sys.stdin.read().split())
+a, b = map(int,
+    sys.stdin.read().split())
 print(a + b)
 \end{verbatim}
 
@@ -418,55 +434,6 @@ for row in grid:
     count += row.count('1')
 
 print(count)
-\end{verbatim}
-\end{tcolorbox}
-
-\begin{tcolorbox}[breakable, colframe=black!75, colback=black!5, title=\textbf{C++ I/O Examples}]
-\textbf{Example 1 (Problem: Sum of two numbers)}\\
-\textbf{\textless{}context\textgreater{}}\\
-Write a program that reads two integers and prints the sum.\\
-\textbf{\textless{}/context\textgreater{}}\\
-\textbf{Expected response:}
-\begin{verbatim}
-#include <bits/stdc++.h>
-using namespace std;
-int main() {
-    int a, b;
-    if (cin >> a >> b)
-        cout << a + b << endl;
-    return 0;
-}
-\end{verbatim}
-
-\vspace{0.3cm}
-\textbf{Example 2 (Problem: Count occupied cells)}\\
-\textbf{\textless{}context\textgreater{}}\\
-Given a grid of N rows and M columns, count how many '1' characters exist.\\
-\textbf{\textless{}/context\textgreater{}}\\
-\textbf{Expected response:}
-\begin{verbatim}
-#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-
-    int n, m;
-    if (!(cin >> n >> m)) return 0;
-
-    int count = 0;
-    for (int i = 0; i < n; i++) {
-        string row;
-        cin >> row;
-        for (char c : row) {
-            if (c == '1') count++;
-        }
-    }
-
-    cout << count << endl;
-    return 0;
-}
 \end{verbatim}
 \end{tcolorbox}
 
